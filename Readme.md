@@ -2,6 +2,8 @@
 
 In order to run this app, node.js should be installed on the machine. 
 
+After installing node run `npm install -g typescript` to install typescript globally. 
+
 Run `npm install` and `npm run build` to install dependencies and build app
 
 After that run `node .\dist\node.js ` with following arguments : 
