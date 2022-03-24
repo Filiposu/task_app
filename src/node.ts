@@ -1,6 +1,7 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { BranchResponse, BuildResponse } from "./models/interfaces";
+import { BuildResponse } from "./models/interfaces";
 import * as yargs from 'yargs';
+import { getBranches, UserCredentials } from "./service/appcenter";
+import { build } from "./service/appbuild";
 
 const parser = yargs.options({
     owner: {
@@ -17,65 +18,32 @@ const parser = yargs.options({
       alias: 'k',
       description: 'Api key',
       demandOption: true
-  }
-  });
-
-const url: String  = "https://api.appcenter.ms/v0.1/apps/";
+    },
+    interval: {
+      alias: 'i',
+      description: 'Interval between requests for build status',
+      default:10000
+    }
+});
 
 (async() => {
 
   const argv : any = await parser.argv;
-  const owner_name =  argv.owner;
-  const token = argv.key;
-  const app_name = argv.app;
-  const url: String  = "https://api.appcenter.ms/v0.1/apps/";
-  const branchRequest = url.concat(owner_name+"/").concat(app_name+"/").concat("branches");
+  const creds:UserCredentials  = {
+    owner: argv.owner,
+    token: argv.key,
+    app:argv.app,
+    interval:argv.interval
+  }
+
   let branches : Array<Promise<BuildResponse|undefined>> = [];
-
-  
-  const build  = async (appName:String,branchName:String,commit:String) : Promise<BuildResponse|undefined> => {
-    let buildPost = `https://api.appcenter.ms/v0.1/apps/${owner_name}/${appName}/branches/${branchName}/builds`;
-    try {
-      const totalItems = await axios({url:buildPost,headers: {'X-API-Token': token},method:"POST",params:{sourceVersion:commit,debug:true}});
-      var buildStatus = totalItems.data as BuildResponse;
-      let buildStatusUrl = `https://api.appcenter.ms/v0.1/apps/togrul125-gmail.com/React/builds/${buildStatus.buildNumber}`;  
-      return await new Promise(resolve => {
-        const interval = setInterval(() => {          
-          axios.get<BuildResponse>(buildStatusUrl,{headers:{'X-API-Token': token}}).then((data)=>{
-            console.log(`Retrieving build status on ${buildStatus.sourceBranch}, status: ${data.data.status} `)
-            if(data.data.status === "completed"){
-              resolve(data.data);
-              clearInterval(interval);
-            }
-          }).catch(error=>{
-            console.log(error);
-          });
-        }, 10000);
-      });    
-    } catch (error:any) {
-       return error;
-    }
-  };
-
-  axios({
-    method:"GET",
-    headers: {'X-API-Token': token},
-    url:branchRequest
-  }).then(res=>{
-     res.data.forEach((item:BranchResponse)=>{      
-          let built = build(app_name,item.branch.name,item.branch.commit.sha);
-          branches.push(built);
-    })
-    Promise.all(branches).then(function (results) {
-      results.forEach(element=>{
-          if(element != undefined){
-            let logTime : number = (new Date(element.finishTime).getTime() - new Date(element.startTime).getTime())/1000;
-            let logUrl = `https://api.appcenter.ms/v0.1/apps/${owner_name}/${app_name}/builds/${element.buildNumber}/logs`;
-            console.log(`${element.sourceBranch} build ${element.result} in ${logTime} seconds. Link to build logs: ${logUrl}`)
-          }        
-      })
-    });
-  });  
+  let branchReponse = await getBranches(creds);
+  branchReponse.forEach(b=>{
+    if(b.branch!=null){
+      let built = build(creds,b.branch.name,b.branch.commit.sha);
+      branches.push(built);
+    } 
+  })
   
 })();
 

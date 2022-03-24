@@ -1,10 +1,10 @@
 export interface Commit {
-  sha: String,
-  url: String
+  sha: string,
+  url: string
 }
 
 export interface Branch {
-  name : String,
+  name : string,
   commit: Commit
 }
 
