@@ -17,7 +17,6 @@ const headers: Readonly<Record<string, string | boolean>> = {
 // We can use the following function to inject the JWT token through an interceptor
 // We get the `accessToken` from the localStorage that we set when we authenticate
 
-
 class Http {
   private instance: AxiosInstance | null = null;
 
@@ -27,13 +26,13 @@ class Http {
 
   initHttp() {
     const http = axios.create({
-      headers
+      headers,
     });
-    
+
     http.interceptors.response.use(
       (response) => {
-        if(response.data==null){
-          this.handleError({status:response.status}) 
+        if (response.data == null) {
+          this.handleError({ status: response.status });
         }
         return response;
       },
@@ -47,7 +46,6 @@ class Http {
     return http;
   }
 
-
   get(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse> {
     return this.http.get(url, config);
   }
@@ -57,11 +55,11 @@ class Http {
     data: any,
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse> {
-    return this.http.post(url,data,config);
+    return this.http.post(url, data, config);
   }
   // Handle global app errors
   // We can handle generic app errors depending on the status code
-  private handleError(error: { status: any; }) {
+  private handleError(error: { status: any }) {
     const { status } = error;
 
     switch (status) {

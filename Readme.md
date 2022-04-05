@@ -12,4 +12,4 @@ After that run `node .\dist\node.js ` with following arguments :
 * --key (Api key which is required for authorization)
 * --interval (Interval between requests for build status. Default is 10 seconds )
 
-Final command should like like this `node .\dist\node.js --owner togrul125-gmail.com --app React --key sampleKey`
+Final command should like like this `node .\dist\node.js --owner togrul125-gmail.com --app React --key sampleKey --interval 10000`
